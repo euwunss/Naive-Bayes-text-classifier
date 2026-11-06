@@ -41,6 +41,12 @@ total_words = {
     "negative": 0
 }
 
+# prior probabilities for each class
+class_priors = {
+    "positive": 0.0,
+    "negative": 0.0
+}
+
 def train_model(train_file="data/train.csv"):
     """
     Train the Naive Bayes classifier on the training dataset.
@@ -84,8 +90,32 @@ def train_model(train_file="data/train.csv"):
             total_words[label] += len(words)
 
             # add unique tokens to the vocabulary set
-            vocabulary.update(words)        
+            vocabulary.update(words)
 
+        # calculate prior class probabilities
+        total_class_count = sum(class_counts.values())
+        class_priors["positive"] = class_counts["positive"] / total_class_count
+        class_priors["negative"] = class_counts["negative"] / total_class_count
+
+def get_word_likelihood(word, label):
+    """
+    Calculate word likelihood using Laplacian smoothing: P(w|c) = (count(w, c) + 1) / (N_c + |V|)
+        where P(w|c) is the word likelihood in the class,
+        count(w, c) is the number of word occurences in the class,
+        N_c is the total count of all words in class c,
+        |V| is the number of unique words in the training vocabulary.
+    Returns: Laplace-smoothed probability
+    """
+
+    # count(w, c)
+    word_count = bag_of_words[label][word]
+
+    numerator = word_count + 1
+
+    # N_c + |V|
+    denominator = total_words[label] + len(vocabulary)
+
+    return numerator / denominator
 
 def predict(text):
     """
