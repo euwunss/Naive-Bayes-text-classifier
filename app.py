@@ -7,6 +7,16 @@ import csv
 import math
 import re
 
+def tokenize(text):
+    text = text.lower()
+
+    # normalize Ukrainian apostrophes
+    text = text.replace("’", "'").replace("ʼ", "'")
+
+    # split text into words, removing punctuation
+    words = re.findall(r"[а-яіїєґa-z0-9]+(?:'[а-яіїєґa-z0-9]+)*", text)
+
+    return words
 
 def train_model(train_file="data/train.csv"):
     """
