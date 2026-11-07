@@ -125,7 +125,36 @@ def predict(text):
                   or default to 'positive' if priors are equal.
     TODO: Implement your log-score calculation and class prediction.
     """
-    return "positive"
+
+    # tokenize the input sentence
+    words = tokenize(text)
+
+    # initialize scores with log class priors
+    scores = {
+        "positive": math.log(class_priors["positive"]),
+        "negative": math.log(class_priors["negative"])
+    }
+
+    # calculate the class scores
+    for word in words:
+        if word in vocabulary:
+            for label in scores:
+                scores[label] += math.log(get_word_likelihood(word, label))
+
+    # compare scores and select the predicted class with higher score
+    if scores["positive"] > scores["negative"]:
+        return "positive"
+    elif scores["negative"] > scores["positive"]:
+        return "negative"
+
+    # if scores are tied, compare class priors
+    else:
+        if (class_priors["negative"] > class_priors["positive"]):
+            return "negative"
+
+        # if class priors are also tied or positive class prior is higher, return "positive"
+        else:
+            return "positive"
 
 
 def evaluate_model(test_file="data/test.csv"):
