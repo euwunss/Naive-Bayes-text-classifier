@@ -50,8 +50,6 @@ class_priors = {
 def train_model(train_file="data/train.csv"):
     """
     Train the Naive Bayes classifier on the training dataset.
-    TODO: Implement your preprocessing, vocabulary extraction,
-          class priors, and word likelihoods with Laplace smoothing.
     """
 
     # clear before retraining
@@ -66,7 +64,7 @@ def train_model(train_file="data/train.csv"):
     total_words["positive"] = 0
     total_words["negative"] = 0
 
-    # open and read the CSV dataset
+    # open and read the training CSV dataset
     with open(train_file, "r", encoding="utf-8-sig", newline="") as file:
         reader = csv.DictReader(file)
 
@@ -123,7 +121,6 @@ def predict(text):
     Returns: 'positive' or 'negative'
     Tie-breaking: If scores are tied, select the class with the higher prior P(c),
                   or default to 'positive' if priors are equal.
-    TODO: Implement your log-score calculation and class prediction.
     """
 
     # tokenize the input sentence
@@ -166,10 +163,56 @@ def evaluate_model(test_file="data/test.csv"):
                 "accuracy": float,
                 "confusion_matrix": {"TP": int, "TN": int, "FP": int, "FN": int}
             }
-    TODO: Implement your evaluation logic (accuracy, confusion matrix).
     """
-    pass
+    confusion_matrix = {
+        "TP": 0,
+        "TN": 0,
+        "FP": 0,
+        "FN": 0
+    }
+
+    # open and read the testing CSV dataset
+    with open(test_file, "r", encoding="utf-8-sig", newline="") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            text = row["text"]
+            actual_label = row["label"]
+
+            predicted_label = predict(text)
+
+            # compare actual and predicted labels
+            if actual_label == predicted_label and actual_label == "positive":
+                confusion_matrix["TP"] += 1
+            elif actual_label == predicted_label and actual_label == "negative":
+                confusion_matrix["TN"] += 1
+            elif actual_label == "positive" and predicted_label == "negative":
+                confusion_matrix["FN"] += 1
+            else:
+                confusion_matrix["FP"] += 1
+
+    # calculate total number of predictions and number of correct predictions
+    total_predictions = sum(confusion_matrix.values())
+    correct_predictions = confusion_matrix["TP"] + confusion_matrix["TN"]
+
+    # calculate accuracy
+    if total_predictions > 0:
+        accuracy = correct_predictions / total_predictions
+    else:
+        accuracy = 0.0
+
+    # return accuracy and confusion matrix as a dict
+    result = {
+        "accuracy": accuracy,
+        "confusion_matrix": confusion_matrix
+    }
+
+    return result
 
 
 if __name__ == "__main__":
     train_model()
+
+    evaluation_result = evaluate_model()
+    print(f"Accuracy: {evaluation_result['accuracy'] * 100:.2f}%")
+    print("Confusion matrix:", evaluation_result["confusion_matrix"])
