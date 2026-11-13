@@ -213,6 +213,25 @@ def evaluate_model(test_file="data/test.csv"):
 if __name__ == "__main__":
     train_model()
 
+    print("\nUkrainian Sentiment Classifier\n")
+
     evaluation_result = evaluate_model()
     print(f"Accuracy: {evaluation_result['accuracy'] * 100:.2f}%")
     print("Confusion matrix:", evaluation_result["confusion_matrix"])
+    print()
+
+    # interactive sentiment prediction
+    while True:
+        user_input = input("Enter Ukrainian sentence (or q for quit): ").strip()
+
+        if user_input.lower() == "q":
+            print("Exiting.\n")
+            break
+
+        if not user_input:
+            print("Please enter a sentence.\n")
+            continue
+
+        predicted_sentiment = predict(user_input)
+        print("Predicted:", predicted_sentiment)
+        print()
