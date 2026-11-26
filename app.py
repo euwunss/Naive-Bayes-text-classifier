@@ -209,6 +209,51 @@ def evaluate_model(test_file="data/test.csv"):
 
     return result
 
+def print_model_stats():
+    print("===Training Statistics===\n")
+    print("Training sentences:", sum(class_counts.values()))
+    print("Vocabulary size (|V|):", len(vocabulary))
+
+    for label in ("positive", "negative"):
+        print(f"\n{label.capitalize()} class:")
+        print("Sentence count:", class_counts[label])
+        print(f"Prior P(c): {class_priors[label]:.6f}")
+        print("Total word occurrences (N_c):", total_words[label])
+
+def show_prediction_details(text):
+    words = tokenize(text)
+    print("\n===Prediction===\n")
+    print("Sentence:", text)
+    print("Tokens:", words)
+    print()
+
+    scores = {}
+    for label in ("positive", "negative"):
+        scores[label] = math.log(class_priors[label])
+        print(f"Starting {label} log prior: {scores[label]:.6f}")
+
+    for word in words:
+        if word not in vocabulary:
+            print(f"\n'{word}' is not in the training vocabulary. Ignoring it")
+            continue
+
+        print(f"\nWord: '{word}'")
+        for label in ("positive", "negative"):
+            count = bag_of_words[label][word]
+            likelihood = get_word_likelihood(word, label)
+            log_likelihood = math.log(likelihood)
+            scores[label] += log_likelihood
+
+            print(f"{label}: count={count}, "
+                  f"P(w|c)=({count}+1)/({total_words[label]}+{len(vocabulary)})"
+                  f"={likelihood:.6f}, log={log_likelihood:.6f}")
+
+    print("\nFinal positive log score:", round(scores["positive"], 6))
+    print("Final negative log score:", round(scores["negative"], 6))
+    print("Prediction:", predict(text))
+    print()
+
+
 
 if __name__ == "__main__":
     train_model()
@@ -220,9 +265,11 @@ if __name__ == "__main__":
     print("Confusion matrix:", evaluation_result["confusion_matrix"])
     print()
 
+    print_model_stats()
+
     # interactive sentiment prediction
     while True:
-        user_input = input("Enter Ukrainian sentence (or q for quit): ").strip()
+        user_input = input("\nEnter Ukrainian sentence (or q for quit): ").strip()
 
         if user_input.lower() == "q":
             print("Exiting.\n")
@@ -232,6 +279,5 @@ if __name__ == "__main__":
             print("Please enter a sentence.\n")
             continue
 
-        predicted_sentiment = predict(user_input)
-        print("Predicted:", predicted_sentiment)
+        show_prediction_details(user_input)
         print()
